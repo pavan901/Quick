@@ -16,6 +16,10 @@ import {
   RTCView,
 } from '@videosdk.live/react-native-sdk';
 import {createMeeting, token} from './api';
+import {NativeModules} from 'react-native';
+import {
+  VideoProcessor,
+} from '@videosdk.live/react-native-webrtc';
 
 function JoinScreen(props) {
   const [meetingVal, setMeetingVal] = useState('');
@@ -93,6 +97,16 @@ const Button = ({onPress, buttonText, backgroundColor}) => {
   );
 };
 
+const {VideoEffectModule} = NativeModules;
+
+function register() {
+  VideoEffectModule.registerProcessor('VideoProcessor');
+}
+
+function applyProcessor() {
+  VideoProcessor.applyVideoProcessor('VideoProcessor');
+}
+
 function ControlsContainer({join, leave, toggleWebcam, toggleMic}) {
   return (
     <View
@@ -128,6 +142,14 @@ function ControlsContainer({join, leave, toggleWebcam, toggleMic}) {
         }}
         buttonText={'Leave'}
         backgroundColor={'#FF0000'}
+      />
+      <Button
+        onPress={() => {
+          register();
+          applyProcessor();
+        }}
+        buttonText={'PiP'}
+        backgroundColor={'#1178F8'}
       />
     </View>
   );

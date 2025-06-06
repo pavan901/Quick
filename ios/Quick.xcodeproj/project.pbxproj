@@ -8,10 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		19D380ED59D5322FC3299891 /* libPods-Quick.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FEAD2E1FCCD7CF1B313DA17A /* libPods-Quick.a */; };
 		4BE61E5FA3DB1ED23EE8FC5F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		5890A6A82DF2F96400980298 /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5890A6A72DF2F95B00980298 /* VideoProcessor.swift */; };
+		5890A6AA2DF2F9DD00980298 /* VideoEffectModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 5890A6A92DF2F9D800980298 /* VideoEffectModule.m */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		D6A9E168F62A715A56B0CAC8 /* libPods-Quick.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D1A864E0ADE80A104E14094 /* libPods-Quick.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,12 +21,16 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Quick/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Quick/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = Quick/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		3D1A864E0ADE80A104E14094 /* libPods-Quick.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Quick.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		41912FFF64E7C354C003F529 /* Pods-Quick.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Quick.release.xcconfig"; path = "Target Support Files/Pods-Quick/Pods-Quick.release.xcconfig"; sourceTree = "<group>"; };
+		5890A6A72DF2F95B00980298 /* VideoProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoProcessor.swift; sourceTree = "<group>"; };
+		5890A6A92DF2F9D800980298 /* VideoEffectModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VideoEffectModule.m; sourceTree = "<group>"; };
+		5890A6AB2DF2F9DF00980298 /* Quick-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Quick-Bridging-Header.h"; sourceTree = "<group>"; };
+		5890A6AC2DF2F9F300980298 /* VideoEffectModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VideoEffectModule.h; sourceTree = "<group>"; };
+		6AC12F23CB5BE02E88A2CF9F /* Pods-Quick.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Quick.debug.xcconfig"; path = "Target Support Files/Pods-Quick/Pods-Quick.debug.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Quick/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Quick/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		C567B314D3738CBA65C2BD54 /* Pods-Quick.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Quick.release.xcconfig"; path = "Target Support Files/Pods-Quick/Pods-Quick.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		FA658F46FFF2129B93CD70D6 /* Pods-Quick.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Quick.debug.xcconfig"; path = "Target Support Files/Pods-Quick/Pods-Quick.debug.xcconfig"; sourceTree = "<group>"; };
+		FEAD2E1FCCD7CF1B313DA17A /* libPods-Quick.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Quick.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,7 +38,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D6A9E168F62A715A56B0CAC8 /* libPods-Quick.a in Frameworks */,
+				19D380ED59D5322FC3299891 /* libPods-Quick.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -42,11 +48,15 @@
 		13B07FAE1A68108700A75B9A /* Quick */ = {
 			isa = PBXGroup;
 			children = (
+				5890A6AC2DF2F9F300980298 /* VideoEffectModule.h */,
+				5890A6A92DF2F9D800980298 /* VideoEffectModule.m */,
+				5890A6A72DF2F95B00980298 /* VideoProcessor.swift */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
+				5890A6AB2DF2F9DF00980298 /* Quick-Bridging-Header.h */,
 			);
 			name = Quick;
 			sourceTree = "<group>";
@@ -55,7 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				3D1A864E0ADE80A104E14094 /* libPods-Quick.a */,
+				FEAD2E1FCCD7CF1B313DA17A /* libPods-Quick.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -92,8 +102,8 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				FA658F46FFF2129B93CD70D6 /* Pods-Quick.debug.xcconfig */,
-				41912FFF64E7C354C003F529 /* Pods-Quick.release.xcconfig */,
+				6AC12F23CB5BE02E88A2CF9F /* Pods-Quick.debug.xcconfig */,
+				C567B314D3738CBA65C2BD54 /* Pods-Quick.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -105,13 +115,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Quick" */;
 			buildPhases = (
-				4624EC35C20D2353363A4180 /* [CP] Check Pods Manifest.lock */,
+				19628F30803B6FA88504960F /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				07FAF5B1E3AA37C812EF88FC /* [CP] Embed Pods Frameworks */,
-				E5A5F79E0BAD9EE2836E615A /* [CP] Copy Pods Resources */,
+				96B2F2FFC7AD12C8E26AD4BA /* [CP] Embed Pods Frameworks */,
+				983849A299B2A256F1452FA1 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -131,7 +141,7 @@
 				LastUpgradeCheck = 1210;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
-						LastSwiftMigration = 1120;
+						LastSwiftMigration = 1620;
 					};
 				};
 			};
@@ -183,24 +193,7 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		07FAF5B1E3AA37C812EF88FC /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Quick/Pods-Quick-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Quick/Pods-Quick-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Quick/Pods-Quick-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		4624EC35C20D2353363A4180 /* [CP] Check Pods Manifest.lock */ = {
+		19628F30803B6FA88504960F /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -222,7 +215,24 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		E5A5F79E0BAD9EE2836E615A /* [CP] Copy Pods Resources */ = {
+		96B2F2FFC7AD12C8E26AD4BA /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Quick/Pods-Quick-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Quick/Pods-Quick-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Quick/Pods-Quick-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		983849A299B2A256F1452FA1 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -246,6 +256,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5890A6A82DF2F96400980298 /* VideoProcessor.swift in Sources */,
+				5890A6AA2DF2F9DD00980298 /* VideoEffectModule.m in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -255,7 +267,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FA658F46FFF2129B93CD70D6 /* Pods-Quick.debug.xcconfig */;
+			baseConfigurationReference = 6AC12F23CB5BE02E88A2CF9F /* Pods-Quick.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -276,6 +288,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = Quick;
+				SWIFT_OBJC_BRIDGING_HEADER = "Quick-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -284,7 +297,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 41912FFF64E7C354C003F529 /* Pods-Quick.release.xcconfig */;
+			baseConfigurationReference = C567B314D3738CBA65C2BD54 /* Pods-Quick.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -304,6 +317,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = Quick;
+				SWIFT_OBJC_BRIDGING_HEADER = "Quick-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
