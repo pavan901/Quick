@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
   TouchableOpacity,
@@ -15,8 +15,8 @@ import {
   MediaStream,
   RTCView,
 } from '@videosdk.live/react-native-sdk';
-import {createMeeting, token} from './api';
-import {NativeModules} from 'react-native';
+import { createMeeting, token } from './api';
+import { NativeModules } from 'react-native';
 import {
   VideoProcessor,
 } from '@videosdk.live/react-native-webrtc';
@@ -35,8 +35,8 @@ function JoinScreen(props) {
         onPress={() => {
           props.getMeetingId();
         }}
-        style={{backgroundColor: '#1178F8', padding: 12, borderRadius: 6}}>
-        <Text style={{color: 'white', alignSelf: 'center', fontSize: 18}}>
+        style={{ backgroundColor: '#1178F8', padding: 12, borderRadius: 6 }}>
+        <Text style={{ color: 'white', alignSelf: 'center', fontSize: 18 }}>
           Create Meeting
         </Text>
       </TouchableOpacity>
@@ -73,7 +73,7 @@ function JoinScreen(props) {
           console.log('dmeo user ');
           props.getMeetingId(meetingVal);
         }}>
-        <Text style={{color: 'white', alignSelf: 'center', fontSize: 18}}>
+        <Text style={{ color: 'white', alignSelf: 'center', fontSize: 18 }}>
           Join Meeting
         </Text>
       </TouchableOpacity>
@@ -81,7 +81,7 @@ function JoinScreen(props) {
   );
 }
 
-const Button = ({onPress, buttonText, backgroundColor}) => {
+const Button = ({ onPress, buttonText, backgroundColor }) => {
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -92,12 +92,12 @@ const Button = ({onPress, buttonText, backgroundColor}) => {
         padding: 12,
         borderRadius: 4,
       }}>
-      <Text style={{color: 'white', fontSize: 12}}>{buttonText}</Text>
+      <Text style={{ color: 'white', fontSize: 12 }}>{buttonText}</Text>
     </TouchableOpacity>
   );
 };
 
-const {VideoEffectModule} = NativeModules;
+const { VideoEffectModule } = NativeModules;
 
 function register() {
   VideoEffectModule.registerProcessor('VideoProcessor');
@@ -107,7 +107,7 @@ function applyProcessor() {
   VideoProcessor.applyVideoProcessor('VideoProcessor');
 }
 
-function ControlsContainer({join, leave, toggleWebcam, toggleMic}) {
+function ControlsContainer({ join, leave, toggleWebcam, toggleMic }) {
   return (
     <View
       style={{
@@ -154,8 +154,18 @@ function ControlsContainer({join, leave, toggleWebcam, toggleMic}) {
     </View>
   );
 }
-function ParticipantView({participantId}) {
-  const {webcamStream, webcamOn} = useParticipant(participantId);
+
+function onStreamEnabled(stream) {
+  const trackId = stream.track.id;
+  console.log('Stream enabled for track:', trackId);
+  NativeModules.RemoteTrackModule.attachRenderer(trackId);
+}
+
+function ParticipantView({ participantId }) {
+  const { localParticipant } = useMeeting();
+  const { webcamStream, webcamOn } = useParticipant(participantId, {
+    onStreamEnabled: participantId === localParticipant.id ? undefined : onStreamEnabled,
+  });
   return webcamOn && webcamStream ? (
     <RTCView
       streamURL={new MediaStream([webcamStream.track]).toURL()}
@@ -176,16 +186,16 @@ function ParticipantView({participantId}) {
         marginVertical: 8,
         marginHorizontal: 8,
       }}>
-      <Text style={{fontSize: 16}}>NO MEDIA</Text>
+      <Text style={{ fontSize: 16 }}>NO MEDIA</Text>
     </View>
   );
 }
 
-function ParticipantList({participants}) {
+function ParticipantList({ participants }) {
   return participants.length > 0 ? (
     <FlatList
       data={participants}
-      renderItem={({item}) => {
+      renderItem={({ item }) => {
         return <ParticipantView participantId={item} />;
       }}
     />
@@ -197,20 +207,20 @@ function ParticipantList({participants}) {
         justifyContent: 'center',
         alignItems: 'center',
       }}>
-      <Text style={{fontSize: 20}}>Press Join button to enter meeting.</Text>
+      <Text style={{ fontSize: 20 }}>Press Join button to enter meeting.</Text>
     </View>
   );
 }
 
 function MeetingView() {
   // Get `participants` from useMeeting Hook
-  const {join, leave, toggleWebcam, toggleMic, participants,meetingId} = useMeeting({});
+  const { join, leave, toggleWebcam, toggleMic, participants, meetingId } = useMeeting({});
   const participantsArrId = [...participants.keys()];
 
   return (
-    <View style={{flex: 1}}>
+    <View style={{ flex: 1 }}>
       {meetingId ? (
-        <Text style={{fontSize: 18, padding: 12}}>Meeting Id :{meetingId}</Text>
+        <Text style={{ fontSize: 18, padding: 12 }}>Meeting Id :{meetingId}</Text>
       ) : null}
       <ParticipantList participants={participantsArrId} />
       <ControlsContainer
@@ -230,12 +240,12 @@ export default function App() {
     if (!token) {
       console.log('PLEASE PROVIDE TOKEN IN api.js FROM app.videosdk.live');
     }
-    const meetingId = id == null ? await createMeeting({token}) : id;
+    const meetingId = id == null ? await createMeeting({ token }) : id;
     setMeetingId(meetingId);
   };
 
   return meetingId ? (
-    <SafeAreaView style={{flex: 1, backgroundColor: '#F6F6FF'}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F6F6FF' }}>
       <MeetingProvider
         config={{
           meetingId,

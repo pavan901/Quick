@@ -20,4 +20,18 @@ import react_native_webrtc
     //
     super.init()
   }
+  
 }
+
+@objc(RemoteTrackModule)
+class RemoteTrackModule: NSObject {
+  
+  @objc func attachRenderer(_ trackId: String) {
+    if let track = RemoteTrackRegistry.shared().remoteTrack(forId: trackId) {
+      print("✅ Got remote track: \(trackId)")
+    } else {
+      print(" No track for ID: \(trackId)")
+    }
+  }
+}
+
