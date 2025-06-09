@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   TouchableOpacity,
@@ -13,6 +13,7 @@ import {
   useMeeting,
   useParticipant,
   MediaStream,
+  createCameraVideoTrack,
   RTCView,
 } from '@videosdk.live/react-native-sdk';
 import { createMeeting, token } from './api';
@@ -107,6 +108,8 @@ function applyProcessor() {
   VideoProcessor.applyVideoProcessor('VideoProcessor');
 }
 
+const { PiPManager } = NativeModules;
+
 function ControlsContainer({ join, leave, toggleWebcam, toggleMic }) {
   return (
     <View
@@ -115,38 +118,49 @@ function ControlsContainer({ join, leave, toggleWebcam, toggleMic }) {
         flexDirection: 'row',
         justifyContent: 'space-between',
       }}>
-      <Button
-        onPress={() => {
-          join();
-        }}
-        buttonText={'Join'}
-        backgroundColor={'#1178F8'}
-      />
-      <Button
-        onPress={() => {
-          toggleWebcam();
-        }}
-        buttonText={'Toggle Webcam'}
-        backgroundColor={'#1178F8'}
-      />
-      <Button
-        onPress={() => {
-          toggleMic();
-        }}
-        buttonText={'Toggle Mic'}
-        backgroundColor={'#1178F8'}
-      />
-      <Button
-        onPress={() => {
-          leave();
-        }}
-        buttonText={'Leave'}
-        backgroundColor={'#FF0000'}
-      />
+      <View style={{ flex: 1, gap: 12 }}>
+        <Button
+          onPress={() => {
+            join();
+          }}
+          buttonText={'Join'}
+          backgroundColor={'#1178F8'}
+        />
+        <Button
+          onPress={() => {
+            toggleWebcam();
+          }}
+          buttonText={'Toggle Webcam'}
+          backgroundColor={'#1178F8'}
+        />
+        <Button
+          onPress={() => {
+            toggleMic();
+          }}
+          buttonText={'Toggle Mic'}
+          backgroundColor={'#1178F8'}
+        />
+        <Button
+          onPress={() => {
+            leave();
+          }}
+          buttonText={'Leave'}
+          backgroundColor={'#FF0000'}
+        />
+      </View>
+
       <Button
         onPress={() => {
           register();
           applyProcessor();
+        }}
+        buttonText={'Apply Processor'}
+        backgroundColor={'#1178F8'}
+      />
+      <Button
+        onPress={() => {
+          PiPManager.setupPiP();   // call when initializing PiP
+          PiPManager.startPiP();   // call to start PiP mode
         }}
         buttonText={'PiP'}
         backgroundColor={'#1178F8'}
@@ -236,6 +250,22 @@ function MeetingView() {
 export default function App() {
   const [meetingId, setMeetingId] = useState(null);
 
+
+  const getTrack = async () => {
+    const track = await createCameraVideoTrack({
+      optimizationMode: "motion",
+      encoderConfig: "h720p_w960p",
+      facingMode: "user",
+    });
+    setCustomTrack(track);
+  };
+
+  let [customTrack, setCustomTrack] = useState();
+
+  useEffect(() => {
+    getTrack();
+  }, []);
+
   const getMeetingId = async id => {
     if (!token) {
       console.log('PLEASE PROVIDE TOKEN IN api.js FROM app.videosdk.live');
@@ -252,6 +282,7 @@ export default function App() {
           micEnabled: false,
           webcamEnabled: true,
           name: 'Test User',
+          customCameraVideoTrack: customTrack,
         }}
         token={token}>
         <MeetingView />

@@ -10,6 +10,7 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3660CCB5AB28818444D94AEB /* libPods-Quick.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72073FA2B83A9A65B8D8F592 /* libPods-Quick.a */; };
 		4BE61E5FA3DB1ED23EE8FC5F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		580C53D22DF6C45E0060ECF5 /* PiPManagerBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 580C53D12DF6C4590060ECF5 /* PiPManagerBridge.m */; };
 		5890A6A82DF2F96400980298 /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5890A6A72DF2F95B00980298 /* VideoProcessor.swift */; };
 		5890A6AA2DF2F9DD00980298 /* VideoEffectModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 5890A6A92DF2F9D800980298 /* VideoEffectModule.m */; };
 		58F7E1B52DF347DD0080F9FC /* RemoteStreamBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 58F7E1B42DF347D80080F9FC /* RemoteStreamBridge.m */; };
@@ -23,6 +24,7 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Quick/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = Quick/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		3DAA9F91F01963D26E2B075E /* Pods-Quick.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Quick.release.xcconfig"; path = "Target Support Files/Pods-Quick/Pods-Quick.release.xcconfig"; sourceTree = "<group>"; };
+		580C53D12DF6C4590060ECF5 /* PiPManagerBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PiPManagerBridge.m; sourceTree = "<group>"; };
 		5890A6A72DF2F95B00980298 /* VideoProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoProcessor.swift; sourceTree = "<group>"; };
 		5890A6A92DF2F9D800980298 /* VideoEffectModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VideoEffectModule.m; sourceTree = "<group>"; };
 		5890A6AB2DF2F9DF00980298 /* Quick-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Quick-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -50,6 +52,7 @@
 		13B07FAE1A68108700A75B9A /* Quick */ = {
 			isa = PBXGroup;
 			children = (
+				580C53D12DF6C4590060ECF5 /* PiPManagerBridge.m */,
 				58F7E1B42DF347D80080F9FC /* RemoteStreamBridge.m */,
 				5890A6AC2DF2F9F300980298 /* VideoEffectModule.h */,
 				5890A6A92DF2F9D800980298 /* VideoEffectModule.m */,
@@ -260,6 +263,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				58F7E1B52DF347DD0080F9FC /* RemoteStreamBridge.m in Sources */,
+				580C53D22DF6C45E0060ECF5 /* PiPManagerBridge.m in Sources */,
 				5890A6A82DF2F96400980298 /* VideoProcessor.swift in Sources */,
 				5890A6AA2DF2F9DD00980298 /* VideoEffectModule.m in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
