@@ -71,32 +71,59 @@ class RTCFrameRenderer: NSObject, RTCVideoRenderer {
   }
 
   private func convert(frame: RTCVideoFrame) -> CMSampleBuffer? {
-    let buffer: CVPixelBuffer?
-    if let cv = (frame.buffer as? RTCCVPixelBuffer)?.pixelBuffer {
-      buffer = cv
-    } else if let i420 = frame.buffer as? RTCI420Buffer {
-      buffer = convertI420ToNV12(i420)
-    } else {
-      buffer = nil
-    }
+      let buffer: CVPixelBuffer?
+      if let cv = (frame.buffer as? RTCCVPixelBuffer)?.pixelBuffer {
+          buffer = rotatePixelBuffer(cv) // 🔁 Rotate here
+      } else if let i420 = frame.buffer as? RTCI420Buffer {
+        buffer = convertI420ToNV12(i420)
+      } else {
+          buffer = nil
+      }
 
-    guard let pixelBuffer = buffer else { return nil }
+      guard let pixelBuffer = buffer else { return nil }
 
-    var formatDesc: CMVideoFormatDescription?
-    CMVideoFormatDescriptionCreateForImageBuffer(allocator: kCFAllocatorDefault,
-                                                  imageBuffer: pixelBuffer,
-                                                  formatDescriptionOut: &formatDesc)
+      var formatDesc: CMVideoFormatDescription?
+      CMVideoFormatDescriptionCreateForImageBuffer(allocator: kCFAllocatorDefault,
+                                                    imageBuffer: pixelBuffer,
+                                                    formatDescriptionOut: &formatDesc)
 
-    let pts = CMTime(value: CMTimeValue(frame.timeStampNs), timescale: 1_000_000_000)
-    var timing = CMSampleTimingInfo(duration: .invalid, presentationTimeStamp: pts, decodeTimeStamp: .invalid)
+      let pts = CMTime(value: CMTimeValue(frame.timeStampNs), timescale: 1_000_000_000)
+      var timing = CMSampleTimingInfo(duration: .invalid, presentationTimeStamp: pts, decodeTimeStamp: .invalid)
 
-    var sample: CMSampleBuffer?
-    CMSampleBufferCreateReadyWithImageBuffer(allocator: kCFAllocatorDefault,
-                                             imageBuffer: pixelBuffer,
-                                             formatDescription: formatDesc!,
-                                             sampleTiming: &timing,
-                                             sampleBufferOut: &sample)
-    return sample
+      var sample: CMSampleBuffer?
+      CMSampleBufferCreateReadyWithImageBuffer(allocator: kCFAllocatorDefault,
+                                               imageBuffer: pixelBuffer,
+                                               formatDescription: formatDesc!,
+                                               sampleTiming: &timing,
+                                               sampleBufferOut: &sample)
+      return sample
+  }
+
+  private func rotatePixelBuffer(_ pixelBuffer: CVPixelBuffer) -> CVPixelBuffer? {
+      let ciImage = CIImage(cvPixelBuffer: pixelBuffer).oriented(.right)
+      let context = CIContext()
+
+      let width = CVPixelBufferGetHeight(pixelBuffer) // swapped due to 90° rotation
+      let height = CVPixelBufferGetWidth(pixelBuffer)
+
+      var rotatedBuffer: CVPixelBuffer?
+      let attributes: [String: Any] = [
+          kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange),
+          kCVPixelBufferWidthKey as String: width,
+          kCVPixelBufferHeightKey as String: height,
+          kCVPixelBufferIOSurfacePropertiesKey as String: [:]
+      ]
+
+      let result = CVPixelBufferCreate(kCFAllocatorDefault, width, height,
+                                       kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
+                                       attributes as CFDictionary, &rotatedBuffer)
+
+      if result == kCVReturnSuccess, let rotatedBuffer = rotatedBuffer {
+          context.render(ciImage, to: rotatedBuffer)
+          return rotatedBuffer
+      }
+
+      return nil
   }
 
   private func convertI420ToNV12(_ i420: RTCI420Buffer) -> CVPixelBuffer? {
@@ -185,7 +212,6 @@ class SplitVideoView: UIView {
     remoteVideoView.translatesAutoresizingMaskIntoConstraints = false
 
     
-    localVideoView.transform = CGAffineTransform(rotationAngle: .pi / 2)
     localVideoView.clipsToBounds = true
     localVideoView.contentMode = .scaleToFill
     

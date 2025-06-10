@@ -117,6 +117,8 @@ function ControlsContainer({ join, leave, toggleWebcam, toggleMic }) {
         padding: 24,
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: 16,
       }}>
       <View style={{ flex: 1, gap: 12 }}>
         <Button
@@ -148,23 +150,24 @@ function ControlsContainer({ join, leave, toggleWebcam, toggleMic }) {
           backgroundColor={'#FF0000'}
         />
       </View>
-
-      <Button
-        onPress={() => {
-          register();
-          applyProcessor();
-        }}
-        buttonText={'Apply Processor'}
-        backgroundColor={'#1178F8'}
-      />
-      <Button
-        onPress={() => {
-          PiPManager.setupPiP();   // call when initializing PiP
-          PiPManager.startPiP();   // call to start PiP mode
-        }}
-        buttonText={'PiP'}
-        backgroundColor={'#1178F8'}
-      />
+      <View style={{ gap: 12 }}>
+        <Button
+          onPress={() => {
+            register();
+            applyProcessor();
+            PiPManager.setupPiP();
+          }}
+          buttonText={'Apply Processor'}
+          backgroundColor={'#1178F8'}
+        />
+        <Button
+          onPress={() => {
+            PiPManager.startPiP();
+          }}
+          buttonText={'PiP'}
+          backgroundColor={'#1178F8'}
+        />
+      </View>
     </View>
   );
 }
@@ -279,7 +282,7 @@ export default function App() {
       <MeetingProvider
         config={{
           meetingId,
-          micEnabled: false,
+          micEnabled: true,
           webcamEnabled: true,
           name: 'Test User',
           customCameraVideoTrack: customTrack,
