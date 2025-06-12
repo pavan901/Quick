@@ -74,7 +74,7 @@ class RTCFrameRenderer: NSObject, RTCVideoRenderer {
   private func convert(frame: RTCVideoFrame) -> CMSampleBuffer? {
       let buffer: CVPixelBuffer?
       if let cv = (frame.buffer as? RTCCVPixelBuffer)?.pixelBuffer {
-          buffer = rotatePixelBuffer(cv) // 🔁 Rotate here
+          buffer = rotatePixelBuffer(cv) 
       } else if let i420 = frame.buffer as? RTCI420Buffer {
         buffer = convertI420ToNV12(i420)
       } else {
@@ -150,7 +150,7 @@ class RTCFrameRenderer: NSObject, RTCVideoRenderer {
           }
           
           semaphore.signal()
-      }
+    }
       
       // Wait for the image processing to complete
       _ = semaphore.wait(timeout: .now() + .seconds(1))
@@ -305,10 +305,10 @@ class RemoteTrackModule: NSObject, RTCVideoRenderer {
 
   @objc func attachRenderer(_ trackId: String) {
     if let track = RemoteTrackRegistry.shared().remoteTrack(forId: trackId) {
-      print("✅ Got remote track: \(trackId)")
+      print("Got remote track: \(trackId)")
       track.add(self)
     } else {
-      print("❌ No track for ID: \(trackId)")
+      print("No track for ID: \(trackId)")
     }
   }
 
@@ -354,7 +354,7 @@ class PiPManager: NSObject, AVPictureInPictureControllerDelegate {
                       .compactMap({ $0 as? UIWindowScene })
                       .flatMap({ $0.windows })
                       .first(where: { $0.isKeyWindow })?.rootViewController?.view else {
-                print("❌ PiP not supported or root view not found")
+                print("PiP not supported or root view not found")
                 return
             }
 
@@ -385,7 +385,7 @@ class PiPManager: NSObject, AVPictureInPictureControllerDelegate {
             self.pipController?.canStartPictureInPictureAutomaticallyFromInline = true
             self.pipViewController = pipVC
 
-            print("✅ PiP setup complete")
+            print("PiP setup complete")
         }
     }
 
@@ -393,7 +393,7 @@ class PiPManager: NSObject, AVPictureInPictureControllerDelegate {
         DispatchQueue.main.async {
             if self.pipController?.isPictureInPictureActive == false {
                 self.pipController?.startPictureInPicture()
-                print("▶️ PiP started")
+                print("PiP started")
             }
         }
     }
@@ -402,7 +402,7 @@ class PiPManager: NSObject, AVPictureInPictureControllerDelegate {
         DispatchQueue.main.async {
             if self.pipController?.isPictureInPictureActive == true {
                 self.pipController?.stopPictureInPicture()
-                print("⏹️ PiP stopped")
+                print("PiP stopped")
             }
         }
     }
@@ -413,6 +413,6 @@ class PiPManager: NSObject, AVPictureInPictureControllerDelegate {
         }
         pipViewController = nil
         pipController = nil
-        print("🛑 PiP cleanup done")
+        print("PiP cleanup done")
     }
 }

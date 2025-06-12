@@ -18,7 +18,7 @@ import {
 import {createMeeting, token} from './api';
 import {NativeModules} from 'react-native';
 import {VideoProcessor} from '@videosdk.live/react-native-webrtc';
-const { VideoEffectModule, PiPManager, RemoteTrackModule } = NativeModules;
+const {VideoEffectModule, PiPManager, RemoteTrackModule} = NativeModules;
 
 function JoinScreen(props) {
   const [meetingVal, setMeetingVal] = useState('');
@@ -171,7 +171,7 @@ function ParticipantView({
   pipedParticipantRef,
   setWebcamStatusMap,
 }) {
-  const { localParticipant } = useMeeting();
+  const {localParticipant} = useMeeting();
   const {webcamStream, webcamOn} = useParticipant(participantId, {
     onStreamEnabled: stream => {
       setWebcamStatusMap(prev => ({...prev, [participantId]: true}));
