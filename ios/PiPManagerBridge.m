@@ -11,4 +11,5 @@
 RCT_EXTERN_METHOD(setupPiP)
 RCT_EXTERN_METHOD(startPiP)
 RCT_EXTERN_METHOD(stopPiP)
+RCT_EXTERN_METHOD(setShowRemote:(BOOL)value)
 @end

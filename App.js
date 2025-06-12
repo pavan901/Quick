@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState, useEffect } from 'react';
+import React, {useState, useRef} from 'react';
 import {
   SafeAreaView,
   TouchableOpacity,
@@ -13,14 +13,12 @@ import {
   useMeeting,
   useParticipant,
   MediaStream,
-  createCameraVideoTrack,
   RTCView,
 } from '@videosdk.live/react-native-sdk';
-import { createMeeting, token } from './api';
-import { NativeModules } from 'react-native';
-import {
-  VideoProcessor,
-} from '@videosdk.live/react-native-webrtc';
+import {createMeeting, token} from './api';
+import {NativeModules} from 'react-native';
+import {VideoProcessor} from '@videosdk.live/react-native-webrtc';
+const { VideoEffectModule, PiPManager, RemoteTrackModule } = NativeModules;
 
 function JoinScreen(props) {
   const [meetingVal, setMeetingVal] = useState('');
@@ -36,8 +34,8 @@ function JoinScreen(props) {
         onPress={() => {
           props.getMeetingId();
         }}
-        style={{ backgroundColor: '#1178F8', padding: 12, borderRadius: 6 }}>
-        <Text style={{ color: 'white', alignSelf: 'center', fontSize: 18 }}>
+        style={{backgroundColor: '#1178F8', padding: 12, borderRadius: 6}}>
+        <Text style={{color: 'white', alignSelf: 'center', fontSize: 18}}>
           Create Meeting
         </Text>
       </TouchableOpacity>
@@ -74,7 +72,7 @@ function JoinScreen(props) {
           console.log('dmeo user ');
           props.getMeetingId(meetingVal);
         }}>
-        <Text style={{ color: 'white', alignSelf: 'center', fontSize: 18 }}>
+        <Text style={{color: 'white', alignSelf: 'center', fontSize: 18}}>
           Join Meeting
         </Text>
       </TouchableOpacity>
@@ -82,7 +80,7 @@ function JoinScreen(props) {
   );
 }
 
-const Button = ({ onPress, buttonText, backgroundColor }) => {
+const Button = ({onPress, buttonText, backgroundColor}) => {
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -93,12 +91,10 @@ const Button = ({ onPress, buttonText, backgroundColor }) => {
         padding: 12,
         borderRadius: 4,
       }}>
-      <Text style={{ color: 'white', fontSize: 12 }}>{buttonText}</Text>
+      <Text style={{color: 'white', fontSize: 12}}>{buttonText}</Text>
     </TouchableOpacity>
   );
 };
-
-const { VideoEffectModule } = NativeModules;
 
 function register() {
   VideoEffectModule.registerProcessor('VideoProcessor');
@@ -108,9 +104,7 @@ function applyProcessor() {
   VideoProcessor.applyVideoProcessor('VideoProcessor');
 }
 
-const { PiPManager } = NativeModules;
-
-function ControlsContainer({ join, leave, toggleWebcam, toggleMic }) {
+function ControlsContainer({join, leave, toggleWebcam, toggleMic}) {
   return (
     <View
       style={{
@@ -120,7 +114,7 @@ function ControlsContainer({ join, leave, toggleWebcam, toggleMic }) {
         alignItems: 'flex-start',
         gap: 16,
       }}>
-      <View style={{ flex: 1, gap: 12 }}>
+      <View style={{flex: 1, gap: 12}}>
         <Button
           onPress={() => {
             join();
@@ -150,7 +144,7 @@ function ControlsContainer({ join, leave, toggleWebcam, toggleMic }) {
           backgroundColor={'#FF0000'}
         />
       </View>
-      <View style={{ gap: 12 }}>
+      <View style={{gap: 12}}>
         <Button
           onPress={() => {
             register();
@@ -172,26 +166,61 @@ function ControlsContainer({ join, leave, toggleWebcam, toggleMic }) {
   );
 }
 
-function onStreamEnabled(stream) {
-  const trackId = stream.track.id;
-  console.log('Stream enabled for track:', trackId);
-  NativeModules.RemoteTrackModule.attachRenderer(trackId);
-}
-
-function ParticipantView({ participantId }) {
+function ParticipantView({
+  participantId,
+  pipedParticipantRef,
+  setWebcamStatusMap,
+}) {
   const { localParticipant } = useMeeting();
-  const { webcamStream, webcamOn } = useParticipant(participantId, {
-    onStreamEnabled: participantId === localParticipant.id ? undefined : onStreamEnabled,
+  const {webcamStream, webcamOn} = useParticipant(participantId, {
+    onStreamEnabled: stream => {
+      setWebcamStatusMap(prev => ({...prev, [participantId]: true}));
+
+      const trackId = stream.track.id;
+
+      // Automatically assign to PiP if no one is set
+      if (
+        !pipedParticipantRef.current &&
+        participantId !== localParticipant.id
+      ) {
+        pipedParticipantRef.current = participantId;
+        RemoteTrackModule.attachRenderer(trackId);
+        PiPManager.setShowRemote(true);
+      } else if (participantId === pipedParticipantRef.current) {
+        RemoteTrackModule.attachRenderer(trackId);
+        PiPManager.setShowRemote(true);
+      }
+    },
+
+    onStreamDisabled: () => {
+      setWebcamStatusMap(prev => {
+        const updated = {...prev, [participantId]: false};
+
+        if (participantId === pipedParticipantRef.current) {
+          const nextPiped = Object.entries(updated).find(
+            ([id, isOn]) =>
+              id !== localParticipant.id && id !== participantId && isOn,
+          );
+
+          if (nextPiped) {
+            pipedParticipantRef.current = nextPiped[0];
+            PiPManager.setShowRemote(true);
+          } else {
+            pipedParticipantRef.current = null;
+            PiPManager.setShowRemote(false);
+          }
+        }
+
+        return updated;
+      });
+    },
   });
+
   return webcamOn && webcamStream ? (
     <RTCView
       streamURL={new MediaStream([webcamStream.track]).toURL()}
       objectFit={'cover'}
-      style={{
-        height: 300,
-        marginVertical: 8,
-        marginHorizontal: 8,
-      }}
+      style={{height: 300, marginVertical: 8, marginHorizontal: 8}}
     />
   ) : (
     <View
@@ -203,18 +232,26 @@ function ParticipantView({ participantId }) {
         marginVertical: 8,
         marginHorizontal: 8,
       }}>
-      <Text style={{ fontSize: 16 }}>NO MEDIA</Text>
+      <Text style={{fontSize: 16}}>NO MEDIA</Text>
     </View>
   );
 }
 
-function ParticipantList({ participants }) {
+function ParticipantList({
+  participants,
+  pipedParticipantRef,
+  setWebcamStatusMap,
+}) {
   return participants.length > 0 ? (
     <FlatList
       data={participants}
-      renderItem={({ item }) => {
-        return <ParticipantView participantId={item} />;
-      }}
+      renderItem={({item}) => (
+        <ParticipantView
+          participantId={item}
+          pipedParticipantRef={pipedParticipantRef}
+          setWebcamStatusMap={setWebcamStatusMap}
+        />
+      )}
     />
   ) : (
     <View
@@ -224,22 +261,66 @@ function ParticipantList({ participants }) {
         justifyContent: 'center',
         alignItems: 'center',
       }}>
-      <Text style={{ fontSize: 20 }}>Press Join button to enter meeting.</Text>
+      <Text style={{fontSize: 20}}>Press Join button to enter meeting.</Text>
     </View>
   );
 }
 
 function MeetingView() {
-  // Get `participants` from useMeeting Hook
-  const { join, leave, toggleWebcam, toggleMic, participants, meetingId } = useMeeting({});
+  const pipedParticipantRef = useRef(null);
+  const [webcamStatusMap, setWebcamStatusMap] = useState({});
+
+  const {
+    join,
+    leave,
+    toggleWebcam,
+    toggleMic,
+    participants,
+    meetingId,
+    localParticipant,
+  } = useMeeting({
+    onParticipantJoined: participant => {
+      if (
+        participant.id !== localParticipant.id &&
+        !pipedParticipantRef.current
+      ) {
+        pipedParticipantRef.current = participant.id;
+      }
+    },
+    onParticipantLeft: participant => {
+      if (participant.id === pipedParticipantRef.current) {
+        const remaining = [...participants.keys()].filter(
+          id => id !== localParticipant.id && id !== participant.id,
+        );
+
+        const activeId = remaining.find(id => webcamStatusMap[id] === true);
+
+        pipedParticipantRef.current = activeId || null;
+        PiPManager.setShowRemote(!!activeId);
+      }
+      // Cleanup from webcamStatusMap
+      setWebcamStatusMap(prev => {
+        const updated = {...prev};
+        delete updated[participant.id];
+        return updated;
+      });
+    },
+  });
+
   const participantsArrId = [...participants.keys()];
 
   return (
-    <View style={{ flex: 1 }}>
-      {meetingId ? (
-        <Text style={{ fontSize: 18, padding: 12 }}>Meeting Id :{meetingId}</Text>
-      ) : null}
-      <ParticipantList participants={participantsArrId} />
+    <View style={{flex: 1}}>
+      {meetingId && (
+        <Text style={{fontSize: 18, padding: 12}}>
+          Meeting Id : {meetingId}
+        </Text>
+      )}
+      <ParticipantList
+        participants={participantsArrId}
+        pipedParticipantRef={pipedParticipantRef}
+        setWebcamStatusMap={setWebcamStatusMap}
+      />
       <ControlsContainer
         join={join}
         leave={leave}
@@ -253,39 +334,22 @@ function MeetingView() {
 export default function App() {
   const [meetingId, setMeetingId] = useState(null);
 
-
-  const getTrack = async () => {
-    const track = await createCameraVideoTrack({
-      optimizationMode: "motion",
-      encoderConfig: "h720p_w960p",
-      facingMode: "user",
-    });
-    setCustomTrack(track);
-  };
-
-  let [customTrack, setCustomTrack] = useState();
-
-  useEffect(() => {
-    getTrack();
-  }, []);
-
   const getMeetingId = async id => {
     if (!token) {
       console.log('PLEASE PROVIDE TOKEN IN api.js FROM app.videosdk.live');
     }
-    const meetingId = id == null ? await createMeeting({ token }) : id;
+    const meetingId = id == null ? await createMeeting({token}) : id;
     setMeetingId(meetingId);
   };
 
   return meetingId ? (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F6F6FF' }}>
+    <SafeAreaView style={{flex: 1, backgroundColor: '#F6F6FF'}}>
       <MeetingProvider
         config={{
           meetingId,
           micEnabled: true,
           webcamEnabled: true,
           name: 'Test User',
-          customCameraVideoTrack: customTrack,
         }}
         token={token}>
         <MeetingView />

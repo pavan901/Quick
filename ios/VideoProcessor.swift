@@ -29,6 +29,7 @@ class CustomVideoView: UIView {
 class RTCFrameRenderer: NSObject, RTCVideoRenderer {
   private var videoView: CustomVideoView?
   private let processingQueue = DispatchQueue(label: "com.pip.frameProcessing")
+  private let imageProcessingQueue = DispatchQueue(label: "com.pip.imageProcessing", qos: .userInteractive)
   private var pixelBufferPool: CVPixelBufferPool?
   private var bufferWidth = 0, bufferHeight = 0
   private var frameCount = 0
@@ -100,30 +101,61 @@ class RTCFrameRenderer: NSObject, RTCVideoRenderer {
   }
 
   private func rotatePixelBuffer(_ pixelBuffer: CVPixelBuffer) -> CVPixelBuffer? {
-      let ciImage = CIImage(cvPixelBuffer: pixelBuffer).oriented(.right)
-      let context = CIContext()
-
-      let width = CVPixelBufferGetHeight(pixelBuffer) // swapped due to 90° rotation
-      let height = CVPixelBufferGetWidth(pixelBuffer)
-
-      var rotatedBuffer: CVPixelBuffer?
-      let attributes: [String: Any] = [
-          kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange),
-          kCVPixelBufferWidthKey as String: width,
-          kCVPixelBufferHeightKey as String: height,
-          kCVPixelBufferIOSurfacePropertiesKey as String: [:]
-      ]
-
-      let result = CVPixelBufferCreate(kCFAllocatorDefault, width, height,
-                                       kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
-                                       attributes as CFDictionary, &rotatedBuffer)
-
-      if result == kCVReturnSuccess, let rotatedBuffer = rotatedBuffer {
-          context.render(ciImage, to: rotatedBuffer)
-          return rotatedBuffer
+      // Create a thread-safe CIContext
+      let context = CIContext(options: [
+          .useSoftwareRenderer: false,
+          .workingColorSpace: CGColorSpaceCreateDeviceRGB()
+      ])
+      
+      var resultBuffer: CVPixelBuffer?
+      
+      // Use a semaphore to make this operation synchronous
+      let semaphore = DispatchSemaphore(value: 0)
+      
+      imageProcessingQueue.async {
+          // Lock the pixel buffer for reading
+          CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+          defer {
+              CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
+          }
+          
+          // Create CIImage from pixel buffer
+          let ciImage = CIImage(cvPixelBuffer: pixelBuffer).oriented(.right)
+          
+          let width = CVPixelBufferGetHeight(pixelBuffer) // swapped due to 90° rotation
+          let height = CVPixelBufferGetWidth(pixelBuffer)
+          
+          var rotatedBuffer: CVPixelBuffer?
+          let attributes: [String: Any] = [
+              kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange),
+              kCVPixelBufferWidthKey as String: width,
+              kCVPixelBufferHeightKey as String: height,
+              kCVPixelBufferIOSurfacePropertiesKey as String: [:]
+          ]
+          
+          let result = CVPixelBufferCreate(kCFAllocatorDefault, width, height,
+                                         kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
+                                         attributes as CFDictionary, &rotatedBuffer)
+          
+          if result == kCVReturnSuccess, let rotatedBuffer = rotatedBuffer {
+              // Lock the output buffer for writing
+              CVPixelBufferLockBaseAddress(rotatedBuffer, [])
+              defer {
+                  CVPixelBufferUnlockBaseAddress(rotatedBuffer, [])
+              }
+              
+              // Perform the render operation
+              context.render(ciImage, to: rotatedBuffer)
+              resultBuffer = rotatedBuffer
+          }
+          
+          semaphore.signal()
       }
-
-      return nil
+      
+      // Wait for the image processing to complete
+      _ = semaphore.wait(timeout: .now() + .seconds(1))
+      
+      return resultBuffer
   }
 
   private func convertI420ToNV12(_ i420: RTCI420Buffer) -> CVPixelBuffer? {
@@ -189,12 +221,16 @@ class MultiStreamFrameRenderer: NSObject {
   }
 }
 
-// MARK: - Split Video View
+// MARK: - splitVideoView
 class SplitVideoView: UIView {
+
   static let shared = SplitVideoView()
 
   let localVideoView = CustomVideoView()
   let remoteVideoView = CustomVideoView()
+
+  private var localWidthConstraint: NSLayoutConstraint?
+  private var remoteLeadingConstraint: NSLayoutConstraint?
 
   override init(frame: CGRect = UIScreen.main.bounds) {
     super.init(frame: frame)
@@ -202,7 +238,9 @@ class SplitVideoView: UIView {
     MultiStreamFrameRenderer.shared.attachViews(local: localVideoView, remote: remoteVideoView)
   }
 
-  required init?(coder: NSCoder) { fatalError() }
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
 
   private func layoutUI() {
     addSubview(localVideoView)
@@ -211,21 +249,43 @@ class SplitVideoView: UIView {
     localVideoView.translatesAutoresizingMaskIntoConstraints = false
     remoteVideoView.translatesAutoresizingMaskIntoConstraints = false
 
-    
     localVideoView.clipsToBounds = true
-    localVideoView.contentMode = .scaleToFill
-    
+    remoteVideoView.clipsToBounds = true
+
+    // Set initial constraints: local takes full width
+    localWidthConstraint = localVideoView.widthAnchor.constraint(equalTo: widthAnchor)
+    remoteLeadingConstraint = remoteVideoView.leadingAnchor.constraint(equalTo: localVideoView.trailingAnchor)
+
     NSLayoutConstraint.activate([
       localVideoView.leadingAnchor.constraint(equalTo: leadingAnchor),
       localVideoView.topAnchor.constraint(equalTo: topAnchor),
       localVideoView.bottomAnchor.constraint(equalTo: bottomAnchor),
-      localVideoView.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.5),
+      localWidthConstraint!,
 
-      remoteVideoView.leadingAnchor.constraint(equalTo: localVideoView.trailingAnchor),
+      remoteLeadingConstraint!,
       remoteVideoView.topAnchor.constraint(equalTo: topAnchor),
+      remoteVideoView.bottomAnchor.constraint(equalTo: bottomAnchor),
       remoteVideoView.trailingAnchor.constraint(equalTo: trailingAnchor),
-      remoteVideoView.bottomAnchor.constraint(equalTo: bottomAnchor)
     ])
+
+    remoteVideoView.isHidden = true
+  }
+
+  func updateRemoteVisibility(showRemote: Bool) {
+    DispatchQueue.main.async {
+      self.remoteVideoView.isHidden = !showRemote
+
+      // Update width constraint for local view
+      self.localWidthConstraint?.isActive = false
+      if showRemote {
+        self.localWidthConstraint = self.localVideoView.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.5)
+      } else {
+        self.localWidthConstraint = self.localVideoView.widthAnchor.constraint(equalTo: self.widthAnchor)
+      }
+
+      self.localWidthConstraint?.isActive = true
+      self.layoutIfNeeded()
+    }
   }
 }
 
@@ -262,75 +322,97 @@ class RemoteTrackModule: NSObject, RTCVideoRenderer {
 
 
 @objc(PiPManager)
-class PiPManager: NSObject , AVPictureInPictureControllerDelegate {
-
-  private var pipController: AVPictureInPictureController?
-  private var pipViewController: AVPictureInPictureVideoCallViewController?
-  private var splitVideoView: SplitVideoView?
-
-  @objc public override init() {
-    super.init()
-  }
-  
-  @objc func setupPiP() {
-    DispatchQueue.main.async {
-      guard AVPictureInPictureController.isPictureInPictureSupported(),
-            let rootView = UIApplication.shared.connectedScenes
-                .compactMap({ $0 as? UIWindowScene })
-                .flatMap({ $0.windows })
-                .first(where: { $0.isKeyWindow })?.rootViewController?.view else {
-        print("❌ PiP not supported or root view not found")
-        return
-      }
-
-      if self.splitVideoView == nil {
-        self.splitVideoView = SplitVideoView(frame: CGRect(x: 0, y: 0, width: 120, height: 90))
-      }
-
-      let pipVC = AVPictureInPictureVideoCallViewController()
-      pipVC.preferredContentSize = CGSize(width: 120, height: 90)
-
-      if let splitView = self.splitVideoView {
-        pipVC.view.addSubview(splitView)
-        splitView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-          splitView.topAnchor.constraint(equalTo: pipVC.view.topAnchor),
-          splitView.bottomAnchor.constraint(equalTo: pipVC.view.bottomAnchor),
-          splitView.leadingAnchor.constraint(equalTo: pipVC.view.leadingAnchor),
-          splitView.trailingAnchor.constraint(equalTo: pipVC.view.trailingAnchor)
-        ])
-      }
-
-      let contentSource = AVPictureInPictureController.ContentSource(
-        activeVideoCallSourceView: rootView,
-        contentViewController: pipVC
-      )
-
-      self.pipController = AVPictureInPictureController(contentSource: contentSource)
-      self.pipController?.canStartPictureInPictureAutomaticallyFromInline = true
-      self.pipViewController = pipVC
-
-      print("✅ PiP setup complete")
+class PiPManager: NSObject, AVPictureInPictureControllerDelegate {
+    // Flag to determine whether to show remote or local video in PiP
+    private var _showRemote: Bool = false {
+        didSet {
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                SplitVideoView.shared.updateRemoteVisibility(showRemote: self._showRemote)
+            }
+        }
     }
-  }
 
+    private var pipController: AVPictureInPictureController?
+    private var pipViewController: AVPictureInPictureVideoCallViewController?
+    private var splitVideoView: SplitVideoView?
 
-  @objc func startPiP() {
-    DispatchQueue.main.async {
-      if self.pipController?.isPictureInPictureActive == false {
-        self.pipController?.startPictureInPicture()
-        print("▶️ PiP started")
-      }
+    @objc public override init() {
+        super.init()
     }
-  }
 
-  @objc func stopPiP() {
-    DispatchQueue.main.async {
-      if self.pipController?.isPictureInPictureActive == true {
-        self.pipController?.stopPictureInPicture()
-        print("⏹️ PiP stopped")
-      }
+    // Called from React Native to toggle the flag
+    @objc func setShowRemote(_ value: Bool) {
+        _showRemote = value
     }
-  }
 
+    @objc func setupPiP() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self,
+                  AVPictureInPictureController.isPictureInPictureSupported(),
+                  let rootView = UIApplication.shared.connectedScenes
+                      .compactMap({ $0 as? UIWindowScene })
+                      .flatMap({ $0.windows })
+                      .first(where: { $0.isKeyWindow })?.rootViewController?.view else {
+                print("❌ PiP not supported or root view not found")
+                return
+            }
+
+            self.splitVideoView = SplitVideoView.shared
+
+            let pipVC = AVPictureInPictureVideoCallViewController()
+            pipVC.preferredContentSize = CGSize(width: 120, height: 90)
+
+            if let splitView = self.splitVideoView {
+                pipVC.view.addSubview(splitView)
+                splitView.translatesAutoresizingMaskIntoConstraints = false
+                NSLayoutConstraint.activate([
+                    splitView.topAnchor.constraint(equalTo: pipVC.view.topAnchor),
+                    splitView.bottomAnchor.constraint(equalTo: pipVC.view.bottomAnchor),
+                    splitView.leadingAnchor.constraint(equalTo: pipVC.view.leadingAnchor),
+                    splitView.trailingAnchor.constraint(equalTo: pipVC.view.trailingAnchor)
+                ])
+                splitView.updateRemoteVisibility(showRemote: self._showRemote)
+            }
+
+            let contentSource = AVPictureInPictureController.ContentSource(
+                activeVideoCallSourceView: rootView,
+                contentViewController: pipVC
+            )
+
+            self.pipController = AVPictureInPictureController(contentSource: contentSource)
+            self.pipController?.delegate = self
+            self.pipController?.canStartPictureInPictureAutomaticallyFromInline = true
+            self.pipViewController = pipVC
+
+            print("✅ PiP setup complete")
+        }
+    }
+
+    @objc func startPiP() {
+        DispatchQueue.main.async {
+            if self.pipController?.isPictureInPictureActive == false {
+                self.pipController?.startPictureInPicture()
+                print("▶️ PiP started")
+            }
+        }
+    }
+
+    @objc func stopPiP() {
+        DispatchQueue.main.async {
+            if self.pipController?.isPictureInPictureActive == true {
+                self.pipController?.stopPictureInPicture()
+                print("⏹️ PiP stopped")
+            }
+        }
+    }
+
+    func pictureInPictureControllerDidStopPictureInPicture(_ controller: AVPictureInPictureController) {
+        if let view = self.splitVideoView {
+            view.removeFromSuperview()
+        }
+        pipViewController = nil
+        pipController = nil
+        print("🛑 PiP cleanup done")
+    }
 }
